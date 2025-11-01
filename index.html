@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UK Directors Benefits Explorer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <h1>UK Directors Benefits Explorer</h1>
+        <p>Compare the top 50 UK directors by HMRC reported benefits.</p>
+      </header>
+
+      <section class="controls" aria-label="Display options and HMRC access configuration">
+        <div class="control">
+          <label for="environment-select">Environment</label>
+          <select id="environment-select">
+            <option value="sandbox">Sandbox (test-api.service.hmrc.gov.uk)</option>
+            <option value="live">Live (api.service.hmrc.gov.uk)</option>
+          </select>
+          <p class="hint">Use sandbox to exercise HMRC test scenarios without affecting production data.</p>
+        </div>
+        <div class="control">
+          <label for="api-key-input">HMRC API key</label>
+          <input
+            id="api-key-input"
+            type="password"
+            placeholder="Paste your bearer token"
+            autocomplete="off"
+          />
+          <p class="hint">
+            The key is saved to <code>localStorage</code> and added to the <code>Authorization: Bearer …</code> header.
+          </p>
+        </div>
+        <div class="control">
+          <label for="scenario-input">Gov-Test-Scenario <span class="optional">(sandbox only)</span></label>
+          <input
+            id="scenario-input"
+            type="text"
+            placeholder="See HMRC docs for values"
+            autocomplete="off"
+          />
+          <p class="hint">Refer to the HMRC docs for scenario identifiers that return pre-canned responses.</p>
+        </div>
+        <div class="control">
+          <label for="dimension-select">Highlight field</label>
+          <select id="dimension-select" aria-describedby="dimension-hint"></select>
+          <p id="dimension-hint" class="hint">Choose the data column you want to emphasise for each director.</p>
+        </div>
+        <div class="control">
+          <label for="sort-select">Sort by</label>
+          <select id="sort-select"></select>
+        </div>
+        <button id="refresh-button" type="button" class="refresh-btn">Refresh data</button>
+      </section>
+
+      <section id="status" class="status" role="status" aria-live="polite"></section>
+
+      <section class="table-wrapper" aria-live="polite">
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th scope="col" class="rank-col">#</th>
+              <th scope="col" id="dimension-header">Director</th>
+              <th scope="col" class="numeric">Total Benefits</th>
+              <th scope="col" class="numeric">Salary</th>
+              <th scope="col" class="numeric">Allowances</th>
+              <th scope="col">Tax Number</th>
+              <th scope="col">Employee Number</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
