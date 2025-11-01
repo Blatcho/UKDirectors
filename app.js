@@ -1,24 +1,8 @@
-const LIVE_BASE_URL = "https://api.service.hmrc.gov.uk";
-const SANDBOX_BASE_URL = "https://test-api.service.hmrc.gov.uk";
-const RESOURCE_PATH = "/individual-benefits/individual-benefits";
-
-// 🔑 HMRC API authentication instructions:
-// 1. Visit https://developer.service.hmrc.gov.uk/ and sign in (or create) your HMRC Developer Hub account.
-// 2. Create a new application and add the "Individual Benefits" API (v1.1). Enable both Live and Sandbox environments.
-// 3. Follow the API's "Create an access token" guide (Client Credentials OAuth flow) to exchange your client id/secret
-//    for a bearer token. Paste that bearer token into the API_KEY constant below.
-// 4. Alternatively, paste the token into the "HMRC API key" field in the UI – it is stored in `localStorage`
-//    on this device only. Never commit a real credential to source control.
-const API_KEY = "REPLACE_WITH_YOUR_HMRC_API_KEY";
-const API_KEY_PLACEHOLDER = "REPLACE_WITH_YOUR_HMRC_API_KEY";
+const API_URL = "https://www.api.gov.uk/hmrc/individual-benefits/individual-benefits";
 const TOP_LIMIT = 50;
-const STORAGE_KEY = "uk-directors-benefits-config";
 
 const dimensionSelect = document.querySelector("#dimension-select");
 const sortSelect = document.querySelector("#sort-select");
-const environmentSelect = document.querySelector("#environment-select");
-const apiKeyInput = document.querySelector("#api-key-input");
-const scenarioInput = document.querySelector("#scenario-input");
 const refreshButton = document.querySelector("#refresh-button");
 const statusEl = document.querySelector("#status");
 const tableBody = document.querySelector("#results-table tbody");
@@ -26,31 +10,9 @@ const dimensionHeader = document.querySelector("#dimension-header");
 
 let allDirectors = [];
 let numericSortFields = new Map();
-const uiConfig = initialiseConfig();
-
-applyConfigToControls(uiConfig);
 
 refreshButton.addEventListener("click", () => {
   loadData(true);
-});
-
-environmentSelect.addEventListener("change", () => {
-  uiConfig.environment = environmentSelect.value;
-  persistConfig();
-  loadData(true);
-});
-
-apiKeyInput.addEventListener("change", () => {
-  uiConfig.apiKey = apiKeyInput.value.trim();
-  persistConfig();
-});
-
-scenarioInput.addEventListener("change", () => {
-  uiConfig.govTestScenario = scenarioInput.value.trim();
-  persistConfig();
-  if (uiConfig.environment === "sandbox") {
-    loadData(true);
-  }
 });
 
 dimensionSelect.addEventListener("change", () => {
@@ -61,96 +23,16 @@ sortSelect.addEventListener("change", () => {
   renderTable();
 });
 
-function initialiseConfig() {
-  const defaults = {
-    environment: "sandbox",
-    apiKey: "",
-    govTestScenario: "",
-  };
-
-  if (typeof window === "undefined" || !window.localStorage) {
-    return { ...defaults };
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...defaults };
-    const parsed = JSON.parse(raw);
-    return {
-      environment: parsed.environment === "live" ? "live" : "sandbox",
-      apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : "",
-      govTestScenario:
-        typeof parsed.govTestScenario === "string" ? parsed.govTestScenario : "",
-    };
-  } catch (error) {
-    console.warn("Unable to parse stored configuration", error);
-    return { ...defaults };
-  }
-}
-
-function applyConfigToControls(config) {
-  environmentSelect.value = config.environment;
-  if (config.apiKey) {
-    apiKeyInput.value = config.apiKey;
-  } else if (API_KEY && API_KEY !== API_KEY_PLACEHOLDER) {
-    apiKeyInput.placeholder = "Using API key from app.js";
-  }
-
-  scenarioInput.value = config.govTestScenario;
-}
-
-function persistConfig() {
-  if (typeof window === "undefined" || !window.localStorage) return;
-  const payload = {
-    environment: uiConfig.environment,
-    apiKey: uiConfig.apiKey,
-    govTestScenario: uiConfig.govTestScenario,
-  };
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  } catch (error) {
-    console.warn("Unable to persist configuration", error);
-  }
-}
-
-function getBaseUrl() {
-  return uiConfig.environment === "live" ? LIVE_BASE_URL : SANDBOX_BASE_URL;
-}
-
-function getActiveApiKey() {
-  const fromUi = uiConfig.apiKey?.trim();
-  if (fromUi) return fromUi;
-  if (API_KEY && API_KEY !== API_KEY_PLACEHOLDER) {
-    return API_KEY;
-  }
-  return "";
-}
-
 async function loadData(forceRefresh = false) {
   toggleLoading(true);
-  statusEl.textContent = forceRefresh
-    ? "Refreshing data from HMRC..."
-    : "Loading data from HMRC...";
+  statusEl.textContent = forceRefresh ? "Refreshing data from HMRC..." : "Loading data from HMRC...";
   statusEl.classList.remove("error");
 
   try {
-    const endpoint = `${getBaseUrl()}${RESOURCE_PATH}`;
-    const headers = new Headers({
-      Accept: "application/vnd.hmrc.1.1+json",
-      "User-Agent": "uk-directors-benefits-explorer/1.0",
-    });
-
-    const apiKey = getActiveApiKey();
-    if (apiKey) {
-      headers.set("Authorization", `Bearer ${apiKey}`);
-    }
-
-    if (uiConfig.environment === "sandbox" && uiConfig.govTestScenario) {
-      headers.set("Gov-Test-Scenario", uiConfig.govTestScenario);
-    }
-
-    const response = await fetch(endpoint, {
-      headers,
+    const response = await fetch(API_URL, {
+      headers: {
+        Accept: "application/json",
+      },
     });
 
     if (!response.ok) {
@@ -165,13 +47,11 @@ async function loadData(forceRefresh = false) {
     }
 
     hydrate(dataset);
-    const descriptor = uiConfig.environment === "live" ? "live" : "sandbox";
-    statusEl.textContent = `Showing ${descriptor} HMRC data fetched at ${new Date().toLocaleTimeString()}.`;
+    statusEl.textContent = `Showing live HMRC data fetched at ${new Date().toLocaleTimeString()}.`;
   } catch (error) {
     console.error(error);
-    const descriptor = uiConfig.environment === "live" ? "live" : "sandbox";
     statusEl.textContent =
-      `Unable to fetch ${descriptor} HMRC data. Showing a recent example dataset so you can explore the interface.`;
+      "Unable to fetch live HMRC data. Showing a recent example dataset so you can explore the interface.";
     statusEl.classList.add("error");
     hydrate(getFallbackData());
   } finally {

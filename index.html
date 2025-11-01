@@ -13,37 +13,7 @@
         <p>Compare the top 50 UK directors by HMRC reported benefits.</p>
       </header>
 
-      <section class="controls" aria-label="Display options and HMRC access configuration">
-        <div class="control">
-          <label for="environment-select">Environment</label>
-          <select id="environment-select">
-            <option value="sandbox">Sandbox (test-api.service.hmrc.gov.uk)</option>
-            <option value="live">Live (api.service.hmrc.gov.uk)</option>
-          </select>
-          <p class="hint">Use sandbox to exercise HMRC test scenarios without affecting production data.</p>
-        </div>
-        <div class="control">
-          <label for="api-key-input">HMRC API key</label>
-          <input
-            id="api-key-input"
-            type="password"
-            placeholder="Paste your bearer token"
-            autocomplete="off"
-          />
-          <p class="hint">
-            The key is saved to <code>localStorage</code> and added to the <code>Authorization: Bearer …</code> header.
-          </p>
-        </div>
-        <div class="control">
-          <label for="scenario-input">Gov-Test-Scenario <span class="optional">(sandbox only)</span></label>
-          <input
-            id="scenario-input"
-            type="text"
-            placeholder="See HMRC docs for values"
-            autocomplete="off"
-          />
-          <p class="hint">Refer to the HMRC docs for scenario identifiers that return pre-canned responses.</p>
-        </div>
+      <section class="controls" aria-label="Display options">
         <div class="control">
           <label for="dimension-select">Highlight field</label>
           <select id="dimension-select" aria-describedby="dimension-hint"></select>
